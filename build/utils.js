@@ -1,4 +1,9 @@
-exports.pages = function (env, folder = '') {
+function isDevMode() {
+  const MODE = process.env.MODE || 'production';
+  return MODE === 'development';
+}
+
+exports.pages = function (folder = '') {
   const rootPagesFolderName = 'pages'
   const HtmlWebpackPlugin = require('html-webpack-plugin')
   const fs = require('fs')
@@ -14,13 +19,13 @@ exports.pages = function (env, folder = '') {
     const viewName = view.split('.')[0];
     const fileName = folder === '' ? `${viewName}/index.html` : `${folder}/${viewName}/index.html`;
     const options = {
-      minify: !env === 'development',
+      minify: !isDevMode(),
       filename: fileName,
       template: `views/${rootPagesFolderName}/${folder}/${view}`,
       inject: true
     };
 
-    if (env === 'development') {
+    if (isDevMode()) {
       options.minify = {
         removeComments: true,
         collapseWhitespace: true,
@@ -32,4 +37,11 @@ exports.pages = function (env, folder = '') {
   })
 
   return pages;
+}
+
+exports.isDevMode = isDevMode;
+
+exports.getMode = function () {
+  const MODE = process.env.MODE || 'production';
+  return MODE;
 }

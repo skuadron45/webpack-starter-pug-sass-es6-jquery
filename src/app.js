@@ -2,9 +2,8 @@
 
 // Styles
 import 'styles/_app.scss';
+import 'scripts/demo';
 
-$(function() {
-  console.log('Ready!');
+$(function () {
 
-  require('scripts/demo');
 })

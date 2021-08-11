@@ -12,16 +12,17 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 const ASSET_PATH = process.env.ASSET_PATH || '/';
 
-
 // Files
-const utils = require('./utils')
+const utils = require('./utils');
+
+const MODE = utils.getMode();
 
 // Configuration
-module.exports = env => {
+module.exports = function (env) {
 
   return {
     target: 'web',
-
+    mode: MODE,
     context: path.join(__dirname, '../src'),
     entry: {
       app: path.join(__dirname, '../src/app.js'),
@@ -29,7 +30,8 @@ module.exports = env => {
     output: {
       publicPath: ASSET_PATH,
       path: path.join(__dirname, '../dist'),
-      filename: 'assets/js/[name].[contenthash:7].bundle.js'
+      // filename: 'assets/js/[name].[contenthash:7].bundle.js'
+      filename: 'assets/js/[name].bundle.js'
     },
     devServer: {
       contentBase: path.join(__dirname, '../src'),
@@ -63,7 +65,7 @@ module.exports = env => {
         {
           test: /\.css$/,
           use: [
-            env === 'development' ? 'style-loader' : MiniCssExtractPlugin.loader,
+            MiniCssExtractPlugin.loader,
             {
               loader: 'css-loader',
               options: {
@@ -78,8 +80,14 @@ module.exports = env => {
         {
           test: /\.scss$/,
           use: [
-            env === 'development' ? 'style-loader' : MiniCssExtractPlugin.loader, // creates style nodes from JS strings
-            { loader: 'css-loader', options: { importLoaders: 1, sourceMap: true } }, // translates CSS into CommonJS
+            MiniCssExtractPlugin.loader,
+            {
+              loader: 'css-loader',
+              options: {
+                importLoaders: 1,
+                sourceMap: true
+              }
+            }, // translates CSS into CommonJS
             'postcss-loader',
             'sass-loader', // compiles Sass to CSS
           ],
@@ -88,24 +96,25 @@ module.exports = env => {
           test: /\.pug$/,
           use: [
             {
-              loader: 'pug-loader'
+              loader: 'pug-loader',
+              options: {
+                pretty: utils.isDevMode()
+              }
             }
           ]
         },
         {
           test: /\.(png|jpe?g|gif|svg|ico)(\?.*)?$/,
-          loader: 'url-loader',
-          options: {
-            limit: 3000,
-            name: 'assets/images/[name].[contenthash:7].[ext]'
+          type: 'asset/resource',
+          generator: {
+            filename: 'assets/images/[name].[contenthash:7][ext]'
           }
         },
         {
           test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-          loader: 'url-loader',
-          options: {
-            limit: 5000,
-            name: 'assets/fonts/[name].[contenthash:7].[ext]'
+          type: 'asset/resource',
+          generator: {
+            filename: 'assets/fonts/[name].[contenthash:7][ext]'
           }
         },
         /* {
@@ -118,16 +127,14 @@ module.exports = env => {
         } */
       ]
     },
-    experiments: {
-      topLevelAwait: true,
-    },
     optimization: {
-      minimize: true,
+      minimize: !utils.isDevMode(),
       minimizer: [
         new TerserPlugin({
           parallel: true,
         }),
-        new OptimizeCSSAssetsPlugin({})
+        new OptimizeCSSAssetsPlugin({
+        })
       ],
       splitChunks: {
         cacheGroups: {
@@ -135,7 +142,8 @@ module.exports = env => {
           vendors: false,
           // vendor chunk
           vendor: {
-            filename: 'assets/js/vendor.[chunkhash:7].bundle.js',
+            // filename: 'assets/js/vendor.[chunkhash:7].bundle.js',
+            filename: 'assets/js/vendor.bundle.js',
             // sync + async chunks
             chunks: 'all',
             // import file path containing node_modules
@@ -156,24 +164,23 @@ module.exports = env => {
         ]
       }),
       new MiniCssExtractPlugin({
-        filename: 'assets/css/[name].[chunkhash:7].bundle.css',
+        // filename: 'assets/css/[name].[chunkhash:7].bundle.css',
+        filename: 'assets/css/[name].bundle.css',
         chunkFilename: '[id].css',
       }),
-
       /*
         Pages
       */
-
       // Desktop page
       new HtmlWebpackPlugin({
-        minify: !env === 'development',
+        minify: !utils.isDevMode(),
         filename: 'index.html',
         template: 'views/index.pug',
         inject: 'body',
       }),
 
-      ...utils.pages(env), // env, public path, parent folder
-      ...utils.pages(env, 'blog'),
+      ...utils.pages(), // env, public path, parent folder
+      ...utils.pages('blog'),
 
       new webpack.ProvidePlugin({
         $: 'jquery',
