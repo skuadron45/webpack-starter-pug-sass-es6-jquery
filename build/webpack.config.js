@@ -9,6 +9,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const RemovePlugin = require('remove-files-webpack-plugin');
 
 const ASSET_PATH = process.env.ASSET_PATH || '/';
 
@@ -26,6 +27,7 @@ module.exports = function (env) {
     context: path.join(__dirname, '../src'),
     entry: {
       app: path.join(__dirname, '../src/app.js'),
+      page: path.join(__dirname, '../src/assets/styles/_page.scss'),
     },
     output: {
       publicPath: ASSET_PATH,
@@ -154,6 +156,20 @@ module.exports = function (env) {
     },
 
     plugins: [
+      new RemovePlugin({
+        after: {
+          test: [
+            {
+              folder: path.join(__dirname, '../dist'),
+              method: (absoluteItemPath) => {
+                return new RegExp(/page.*\.js$/, 'm').test(absoluteItemPath);
+              },
+              recursive: true
+            }
+          ]
+        }
+      }),
+
       new CopyWebpackPlugin({
         patterns: [
           { from: '../manifest.json', to: 'manifest.json' },
@@ -165,7 +181,10 @@ module.exports = function (env) {
       }),
       new MiniCssExtractPlugin({
         // filename: 'assets/css/[name].[chunkhash:7].bundle.css',
-        filename: 'assets/css/[name].bundle.css',
+        // filename: 'assets/css/[name].bundle.css',
+        filename: (pathData) => {
+          return 'assets/css/[name].bundle.css';
+        },
         chunkFilename: '[id].css',
       }),
       /*
@@ -179,8 +198,8 @@ module.exports = function (env) {
         inject: 'body',
       }),
 
-      ...utils.pages(), // env, public path, parent folder
-      ...utils.pages('blog'),
+      // ...utils.pages(), // env, public path, parent folder
+      // ...utils.pages('blog'),
 
       new webpack.ProvidePlugin({
         $: 'jquery',
@@ -188,9 +207,9 @@ module.exports = function (env) {
         'window.$': 'jquery',
         'window.jQuery': 'jquery'
       }),
-      new WebpackNotifierPlugin({
-        title: 'Your project'
-      })
+      // new WebpackNotifierPlugin({
+      //   title: 'Your project'
+      // })
     ]
   }
 };

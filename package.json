@@ -11,7 +11,7 @@
   "repository": "git@github.com:my-user/my-repo.git",
   "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",        
+    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env MODE=development webpack serve --config ./build/webpack.config.js --progress",
     "dev-network": "cross-env MODE=development webpack server --config ./build/webpack.config.js --progress --open --host 0.0.0.0",
     "build": "rimraf dist && cross-env MODE=development webpack --config ./build/webpack.config.js --progress",
@@ -45,6 +45,7 @@
     "postcss-preset-env": "^6.7.0",
     "pug": "^3.0.2",
     "pug-loader": "^2.4.0",
+    "remove-files-webpack-plugin": "^1.4.5",
     "rimraf": "^3.0.2",
     "sass-loader": "^12.0.0",
     "style-loader": "^2.0.0",
